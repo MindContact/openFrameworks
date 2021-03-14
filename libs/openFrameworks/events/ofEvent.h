@@ -9,7 +9,7 @@
 #include <atomic>
 #include <stddef.h>
 #include <functional>
-#include "ofTypes.h"
+#include <deque>
 
 
 /*! \cond PRIVATE */
@@ -379,8 +379,19 @@ enum ofEventOrder{
 class ofEventListener{
 public:
 	ofEventListener(){}
+	ofEventListener(const ofEventListener &) = delete;
+	ofEventListener(ofEventListener &&) = delete;
+	ofEventListener & operator=(const ofEventListener&) = delete;
+	ofEventListener & operator=(ofEventListener&&) = delete;
+
 	ofEventListener(std::unique_ptr<of::priv::AbstractEventToken> && token)
-	:token(std::move(token)){}
+		:token(std::move(token)){}
+
+	ofEventListener & operator=(std::unique_ptr<of::priv::AbstractEventToken> && token){
+		std::swap(this->token, token);
+		return *this;
+	}
+
 	void unsubscribe(){
 		token.reset();
 	}
@@ -388,6 +399,38 @@ private:
 	std::unique_ptr<of::priv::AbstractEventToken> token;
 };
 
+
+
+// -------------------------------------
+class ofEventListeners{
+public:
+	ofEventListeners(){};
+	ofEventListeners(const ofEventListeners &) = delete;
+	ofEventListeners(ofEventListeners &&) = delete;
+	ofEventListeners & operator=(const ofEventListeners&) = delete;
+	ofEventListeners & operator=(ofEventListeners&&) = delete;
+
+
+	void push(std::unique_ptr<of::priv::AbstractEventToken> && listener){
+		listeners.emplace_back(std::move(listener));
+	}
+
+	OF_DEPRECATED_MSG("Don't use this method. If you need granular control over each listener, then use individual ofEventListener instances for each.", void unsubscribe(std::size_t pos));
+
+	void unsubscribeAll(){
+		listeners.clear();
+	}
+
+    bool empty() const {
+        return listeners.size() == 0 ;
+    }
+private:
+	std::deque<ofEventListener> listeners;
+};
+
+inline void ofEventListeners::unsubscribe(std::size_t pos){
+	listeners[pos].unsubscribe();
+}
 
 // -------------------------------------
 // ofEvent main implementation
@@ -487,8 +530,8 @@ protected:
 
 public:
 	template<class TObj, typename TMethod>
-	ofEventListener newListener(TObj * listener, TMethod method, int priority = OF_EVENT_ORDER_AFTER_APP){
-		return ofEventListener(addFunction(make_function(listener,method,priority)));
+	std::unique_ptr<of::priv::AbstractEventToken> newListener(TObj * listener, TMethod method, int priority = OF_EVENT_ORDER_AFTER_APP){
+		return addFunction(make_function(listener,method,priority));
 	}
 
 	template<class TObj, typename TMethod>
@@ -502,8 +545,8 @@ public:
 	}
 
 	template<typename TFunction>
-	ofEventListener newListener(TFunction function, int priority = OF_EVENT_ORDER_AFTER_APP) {
-		return ofEventListener(addFunction(make_function(std::function<typename of::priv::callable_traits<TFunction>::function_type>(function), priority)));
+	std::unique_ptr<of::priv::AbstractEventToken> newListener(TFunction function, int priority = OF_EVENT_ORDER_AFTER_APP) {
+		return addFunction(make_function(std::function<typename of::priv::callable_traits<TFunction>::function_type>(function), priority));
 	}
 
 	template<typename TFunction>
@@ -650,8 +693,8 @@ public:
 	}
 
 	template<class TObj, typename TMethod>
-	ofEventListener newListener(TObj * listener, TMethod method, int priority = OF_EVENT_ORDER_AFTER_APP){
-		return ofEventListener(addFunction(make_function(listener,method,priority)));
+	std::unique_ptr<of::priv::AbstractEventToken> newListener(TObj * listener, TMethod method, int priority = OF_EVENT_ORDER_AFTER_APP){
+		return addFunction(make_function(listener,method,priority));
 	}
 
 	template<class TObj, typename TMethod>
@@ -665,8 +708,8 @@ public:
 	}
 
 	template<typename TFunction>
-	ofEventListener newListener(TFunction function, int priority = OF_EVENT_ORDER_AFTER_APP) {
-		return ofEventListener(addFunction(make_function(std::function<typename of::priv::callable_traits<TFunction>::function_type>(function), priority)));
+	std::unique_ptr<of::priv::AbstractEventToken> newListener(TFunction function, int priority = OF_EVENT_ORDER_AFTER_APP) {
+		return addFunction(make_function(std::function<typename of::priv::callable_traits<TFunction>::function_type>(function), priority));
 	}
 
 	template<typename TFunction>

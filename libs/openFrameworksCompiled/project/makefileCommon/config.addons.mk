@@ -96,7 +96,7 @@ define parse_addon
 	$(eval ADDON_SOURCES=$(PARSED_ADDONS_SOURCE_FILES)) \
 	$(eval PROCESS_NEXT=0) \
 	$(if $(wildcard $(addon)/addon_config.mk), \
-		$(foreach var_line, $(subst $(space),?,$(shell cat $(addon)/addon_config.mk | tr '\n' '\t')), \
+		$(foreach var_line, $(shell cat $(addon)/addon_config.mk | tr '\n ' '\t?'), \
 			$(eval unscaped_var_line=$(strip $(subst ?, ,$(var_line)))) \
 			$(if $(filter $(PROCESS_NEXT),1), $(eval $(unscaped_var_line))) \
 			$(if $(filter %:,$(unscaped_var_line)), \
@@ -199,7 +199,7 @@ define parse_addon
 	) \
 	$(foreach addon_dep, $(strip $(ADDON_DEPENDENCIES)), \
 		$(if $(filter %$(addon_dep), $(PROJECT_ADDONS)), \
-		, \ #else
+		, \
 			$(eval PROJECT_ADDONS += $(addon_dep)) \
 			$(call parse_addon,$(addon_dep)) \
 		) \
@@ -241,24 +241,26 @@ OF_PROJECT_ADDONS_DEPS = $(patsubst %.o,%.d,$(PROJECT_ADDONS_OBJ_FILES))
 ########################################################################
 # print debug information if so instructed
 ifdef MAKEFILE_DEBUG
-	$(info ---PROJECT_ADDONS_PATHS---)
-	$(foreach v, $(PROJECT_ADDONS_PATHS),$(info $(v)))
-	$(info ---PROJECT_ADDONS_WITH_CONFIG---)
-	$(foreach v, $(PROJECT_ADDONS_WITH_CONFIG),$(info $(v)))
-	$(info ---PROJECT_ADDONS_INCLUDES---)
-	$(foreach v, $(PROJECT_ADDONS_INCLUDES),$(info $(v)))
-	$(info ---PROJECT_ADDONS_SOURCE_FILES---)
-	$(foreach v, $(PROJECT_ADDONS_SOURCE_FILES),$(info $(v)))
-	$(info ---PROJECT_ADDONS_LIBS---)
-	$(foreach v, $(PROJECT_ADDONS_LIBS),$(info $(v)))
-	$(info ---PROJECT_ADDONS_OBJFILES---)
-	$(foreach v, $(PROJECT_ADDONS_OBJFILES),$(info $(v)))
-	$(info ---PROJECT_ADDONS_BASE_CFLAGS---)
-	$(foreach v, $(PROJECT_ADDONS_BASE_CFLAGS),$(info $(v)))
-	$(info ---PROJECT_ADDONS_DEFINES_CFLAGS---)
-	$(foreach v, $(PROJECT_ADDONS_DEFINES_CFLAGS),$(info $(v)))
-	$(info ---PROJECT_ADDONS_INCLUDES_CFLAGS---)
-	$(foreach v, $(PROJECT_ADDONS_INCLUDES_CFLAGS),$(info $(v)))
-	$(info ---PROJECT_ADDONS_LDFLAGS---)
-	$(foreach v, $(PROJECT_ADDONS_LDFLAGS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_PATHS---)
+    $(foreach v, $(PROJECT_ADDONS_PATHS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_WITH_CONFIG---)
+    $(foreach v, $(PROJECT_ADDONS_WITH_CONFIG),$(info $(v)))
+    $(info ---PROJECT_ADDONS_INCLUDES---)
+    $(foreach v, $(PROJECT_ADDONS_INCLUDES),$(info $(v)))
+    $(info ---PROJECT_ADDONS_SOURCE_FILES---)
+    $(foreach v, $(PROJECT_ADDONS_SOURCE_FILES),$(info $(v)))
+    $(info ---PROJECT_ADDONS_LIBS---)
+    $(foreach v, $(PROJECT_ADDONS_LIBS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_OBJFILES---)
+    $(foreach v, $(PROJECT_ADDONS_OBJFILES),$(info $(v)))
+    $(info ---PROJECT_ADDONS_BASE_CFLAGS---)
+    $(foreach v, $(PROJECT_ADDONS_BASE_CFLAGS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_DEFINES_CFLAGS---)
+    $(foreach v, $(PROJECT_ADDONS_DEFINES_CFLAGS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_INCLUDES_CFLAGS---)
+    $(foreach v, $(PROJECT_ADDONS_INCLUDES_CFLAGS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_LDFLAGS---)
+    $(foreach v, $(PROJECT_ADDONS_LDFLAGS),$(info $(v)))
+    $(info ---PROJECT_ADDONS_DATA---)
+    $(foreach v, $(PROJECT_ADDONS_DATA),$(info $(v)))
 endif

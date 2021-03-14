@@ -187,8 +187,8 @@ PLATFORM_CFLAGS +=  -nostdlib --sysroot=$(SYSROOT) -fpic \
 	-Wno-invalid-command-line-argument \
 	-Wno-unused-command-line-argument \
 	-no-canonical-prefixes \
-		-gcc-toolchain $(GCC_TOOLCHAIN)/prebuilt/$(HOST_PLATFORM) \
-		-fno-integrated-as
+	-gcc-toolchain $(GCC_TOOLCHAIN)/prebuilt/$(HOST_PLATFORM) \
+	-fno-integrated-as
 
 
 ifeq ($(ABI),armv7)
@@ -212,7 +212,7 @@ endif
 ################################################################################
 
 PLATFORM_LDFLAGS =
-PLATFORM_LDFLAGS += --sysroot=$(SYSROOT) -L"$(NDK_ROOT)/sources/cxx-stl/llvm-libc++/libs/$(ABI_PATH)"
+PLATFORM_LDFLAGS += --sysroot=$(SYSROOT) --isystem=$(SYSROOT) -L"$(NDK_ROOT)/sources/cxx-stl/llvm-libc++/libs/$(ABI_PATH)"
 PLATFORM_LDFLAGS += -shared -Wl,--no-undefined -Wl,--as-needed -Wl,--gc-sections -Wl,--exclude-libs,ALL -gcc-toolchain $(GCC_TOOLCHAIN)/prebuilt/$(HOST_PLATFORM)
 
 
@@ -286,7 +286,7 @@ PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/openFrameworks/sound/ofRtAudioSoundS
 # third party
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/glew/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/videoInput/%
-PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/fmodex/%
+PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/fmod/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/kiss/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/assimp/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/portaudio/%
@@ -321,8 +321,9 @@ PROJECT_EXCLUSIONS += ./libs
 
 PLATFORM_HEADER_SEARCH_PATHS =
 PLATFORM_HEADER_SEARCH_PATHS += "$(SYSROOT)/usr/include/"
-PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/android/support/include"
 PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include"
+PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/cxx-stl/llvm-libc++/include"
+PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/android/support/include"
 #PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/include"
 #PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/$(GCC_VERSION)/include"
 #PLATFORM_HEADER_SEARCH_PATHS += "$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/libs/$(ABI_PATH)/include"

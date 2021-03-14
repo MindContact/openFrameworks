@@ -5,9 +5,13 @@
  *      Author: arturo
  */
 
+#include "ofConstants.h"
 #include "ofMatrixStack.h"
 #include "ofAppBaseWindow.h"
-#include "ofBaseTypes.h"
+#include "glm/mat4x4.hpp"
+#include "glm/gtx/transform.hpp"
+#include "ofGraphicsBaseTypes.h"
+#include "ofLog.h"
 
 using namespace std;
 
@@ -20,6 +24,16 @@ ofMatrixStack::ofMatrixStack(const ofAppBaseWindow * window)
 ,currentMatrixMode(OF_MATRIX_MODELVIEW)
 ,currentMatrix(&modelViewMatrix)
 ,flipRenderSurfaceMatrix(true)
+,modelMatrix(1)
+,viewMatrix(1)
+,viewInverse(1)
+,modelViewMatrix(1)
+,projectionMatrix(1)
+,textureMatrix(1)
+,modelViewProjectionMatrix(1)
+,orientedProjectionMatrix(1)
+,orientationMatrix(1)
+,orientationMatrixInverse(1)
 {
 
 }

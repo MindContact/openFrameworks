@@ -1,9 +1,10 @@
 #include "ofTexture.h"
-#include "ofUtils.h"		// for nextPow2()
-#include "ofAppRunner.h"	// for getWidth()
 #include "ofGraphics.h"
 #include "ofPixels.h"
 #include "ofGLUtils.h"
+#include "ofGLBaseTypes.h"
+#include "ofBufferObject.h"
+#include "ofMesh.h"
 #include <map>
 
 #ifdef TARGET_ANDROID
@@ -181,6 +182,7 @@ void ofRegenerateAllTextures(){
 		tex->clear();
 	}
 }
+
 #endif
 
 //----------------------------------------------------------
@@ -304,12 +306,12 @@ void ofTexture::setUseExternalTextureID(GLuint externTexID){
 
 //----------------------------------------------------------
 void ofTexture::allocate(int w, int h, int glInternalFormat){
-	allocate(w, h, glInternalFormat, ofGetUsingArbTex(), ofGetGLFormatFromInternal(glInternalFormat), ofGetGlTypeFromInternal(glInternalFormat));
+	allocate(w, h, glInternalFormat, ofGetUsingArbTex(), ofGetGLFormatFromInternal(glInternalFormat), ofGetGLTypeFromInternal(glInternalFormat));
 }
 
 //----------------------------------------------------------
 void ofTexture::allocate(int w, int h, int glInternalFormat, bool bUseARBExtension){
-	allocate(w, h, glInternalFormat, bUseARBExtension, ofGetGLFormatFromInternal(glInternalFormat), ofGetGlTypeFromInternal(glInternalFormat));
+	allocate(w, h, glInternalFormat, bUseARBExtension, ofGetGLFormatFromInternal(glInternalFormat), ofGetGLTypeFromInternal(glInternalFormat));
 }
 
 //----------------------------------------------------------
@@ -319,7 +321,7 @@ void ofTexture::allocate(int w, int h, int glInternalFormat, int glFormat, int p
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofPixels& pix){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -328,7 +330,7 @@ void ofTexture::allocate(const ofPixels& pix){
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofPixels& pix, bool bUseARBExtention){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), bUseARBExtention, ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), bUseARBExtention, ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -337,7 +339,7 @@ void ofTexture::allocate(const ofPixels& pix, bool bUseARBExtention){
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofShortPixels& pix){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -346,7 +348,7 @@ void ofTexture::allocate(const ofShortPixels& pix){
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofShortPixels& pix, bool bUseARBExtention){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), bUseARBExtention, ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), bUseARBExtention, ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -356,7 +358,7 @@ void ofTexture::allocate(const ofShortPixels& pix, bool bUseARBExtention){
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofFloatPixels& pix){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -365,7 +367,7 @@ void ofTexture::allocate(const ofFloatPixels& pix){
 
 //----------------------------------------------------------
 void ofTexture::allocate(const ofFloatPixels& pix, bool bUseARBExtention){
-	allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), bUseARBExtention, ofGetGlFormat(pix), ofGetGlType(pix));
+	allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), bUseARBExtention, ofGetGLFormat(pix), ofGetGLType(pix));
 	if((pix.getPixelFormat()==OF_PIXELS_GRAY || pix.getPixelFormat()==OF_PIXELS_GRAY_ALPHA) && ofIsGLProgrammableRenderer()){
 		setRGToRGBASwizzles(true);
 	}
@@ -405,7 +407,7 @@ void ofTexture::allocate(int w, int h, int glInternalFormat, bool bUseARBExtensi
 //----------------------------------------------------------
 
 void ofTexture::allocate(const ofTextureData & textureData){
-	allocate(textureData,ofGetGLFormatFromInternal(textureData.glInternalFormat),ofGetGlTypeFromInternal(textureData.glInternalFormat));
+	allocate(textureData,ofGetGLFormatFromInternal(textureData.glInternalFormat),ofGetGLTypeFromInternal(textureData.glInternalFormat));
 }
 
 //----------------------------------------------------------
@@ -555,7 +557,7 @@ void ofTexture::loadData(const uint16_t * data, int w, int h, int glFormat){
 //----------------------------------------------------------
 void ofTexture::loadData(const uint32_t * data, int w, int h, int glFormat){
 	ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,w,2,ofGetNumChannelsFromGLFormat(glFormat));
-	loadData(data, w, h, glFormat, GL_SHORT);
+	loadData(data, w, h, glFormat, GL_UNSIGNED_INT);
 }
 
 //----------------------------------------------------------
@@ -573,7 +575,7 @@ void ofTexture::loadData(const int16_t * data, int w, int h, int glFormat){
 //----------------------------------------------------------
 void ofTexture::loadData(const int32_t * data, int w, int h, int glFormat){
 	ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,w,2,ofGetNumChannelsFromGLFormat(glFormat));
-	loadData(data, w, h, glFormat, GL_SHORT);
+	loadData(data, w, h, glFormat, GL_INT);
 }
 
 //----------------------------------------------------------
@@ -588,7 +590,7 @@ void ofTexture::loadData(const ofPixels & pix){
 		allocate(pix);
 	}else{
 		ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getBytesStride());
-		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGlFormat(pix), ofGetGlType(pix));
+		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGLFormat(pix), ofGetGLType(pix));
 	}
 }
 
@@ -598,7 +600,7 @@ void ofTexture::loadData(const ofShortPixels & pix){
 		allocate(pix);
 	}else{
 		ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getBytesStride());
-		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGlFormat(pix), ofGetGlType(pix));
+		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGLFormat(pix), ofGetGLType(pix));
 	}
 }
 
@@ -608,35 +610,35 @@ void ofTexture::loadData(const ofFloatPixels & pix){
 		allocate(pix);
 	}else{
 		ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getBytesStride());
-		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGlFormat(pix), ofGetGlType(pix));
+		loadData(pix.getData(), pix.getWidth(), pix.getHeight(), ofGetGLFormat(pix), ofGetGLType(pix));
 	}
 }
 
 //----------------------------------------------------------
 void ofTexture::loadData(const ofPixels & pix, int glFormat){
 	if(!isAllocated()){
-		allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGlType(pix));
+		allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGLType(pix));
 	}
 	ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getWidth(),pix.getBytesPerChannel(),ofGetNumChannelsFromGLFormat(glFormat));
-	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGlType(pix));
+	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGLType(pix));
 }
 
 //----------------------------------------------------------
 void ofTexture::loadData(const ofShortPixels & pix, int glFormat){
 	if(!isAllocated()){
-		allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGlType(pix));
+		allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGLType(pix));
 	}
 	ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getWidth(),pix.getBytesPerChannel(),ofGetNumChannelsFromGLFormat(glFormat));
-	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGlType(pix));
+	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGLType(pix));
 }
 
 //----------------------------------------------------------
 void ofTexture::loadData(const ofFloatPixels & pix, int glFormat){
 	if(!isAllocated()){
-		allocate(pix.getWidth(), pix.getHeight(), ofGetGlInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGlType(pix));
+		allocate(pix.getWidth(), pix.getHeight(), ofGetGLInternalFormat(pix), ofGetUsingArbTex(), glFormat, ofGetGLType(pix));
 	}
 	ofSetPixelStoreiAlignment(GL_UNPACK_ALIGNMENT,pix.getWidth(),pix.getBytesPerChannel(),ofGetNumChannelsFromGLFormat(glFormat));
-	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGlType(pix));
+	loadData(pix.getData(), pix.getWidth(), pix.getHeight(), glFormat, ofGetGLType(pix));
 }
 
 #ifndef TARGET_OPENGLES
@@ -675,6 +677,9 @@ void ofTexture::loadData(const void * data, int w, int h, int glFormat, int glTy
 	// bind texture
 	glBindTexture(texData.textureTarget, (GLuint) texData.textureID);
 	//update the texture image:
+#ifdef TARGET_OF_IOS
+	glTexImage2D(texData.textureTarget, 0, texData.glInternalFormat, texData.tex_w, texData.tex_h, 0, glFormat, glType, 0);
+#endif
 	glTexSubImage2D(texData.textureTarget, 0, 0, 0, w, h, glFormat, glType, data);
 	// unbind texture target by binding 0
 	glBindTexture(texData.textureTarget, 0);
@@ -864,7 +869,7 @@ void ofTexture::disableAlphaMask(){
 //----------------------------------------------------------
 glm::vec2 ofTexture::getCoordFromPoint(float xPos, float yPos) const{
 	
-	glm::vec2 temp;
+	glm::vec2 temp(0);
 	
 	if (!isAllocated()) return temp;
 	
@@ -925,7 +930,7 @@ bool ofTexture::isUsingTextureMatrix() const{
 //----------------------------------------------------------
 glm::vec2 ofTexture::getCoordFromPercent(float xPct, float yPct) const{
 	
-	glm::vec2 temp;
+	glm::vec2 temp(0);
 	
 	if (!isAllocated()) return temp;
 	
@@ -1217,7 +1222,7 @@ void ofTexture::readToPixels(ofPixels & pixels) const {
 	pixels.allocate(texData.width,texData.height,ofGetImageTypeFromGLType(texData.glInternalFormat));
 	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT,pixels.getWidth(),pixels.getBytesPerChannel(),pixels.getNumChannels());
 	glBindTexture(texData.textureTarget,texData.textureID);
-	glGetTexImage(texData.textureTarget,0,ofGetGlFormat(pixels),GL_UNSIGNED_BYTE, pixels.getData());
+	glGetTexImage(texData.textureTarget,0,ofGetGLFormat(pixels),GL_UNSIGNED_BYTE, pixels.getData());
 	glBindTexture(texData.textureTarget,0);
 #endif
 }
@@ -1228,7 +1233,7 @@ void ofTexture::readToPixels(ofShortPixels & pixels) const {
 	pixels.allocate(texData.width,texData.height,ofGetImageTypeFromGLType(texData.glInternalFormat));
 	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT,pixels.getWidth(),pixels.getBytesPerChannel(),pixels.getNumChannels());
 	glBindTexture(texData.textureTarget,texData.textureID);
-	glGetTexImage(texData.textureTarget,0,ofGetGlFormat(pixels),GL_UNSIGNED_SHORT,pixels.getData());
+	glGetTexImage(texData.textureTarget,0,ofGetGLFormat(pixels),GL_UNSIGNED_SHORT,pixels.getData());
 	glBindTexture(texData.textureTarget,0);
 #endif
 }
@@ -1238,7 +1243,7 @@ void ofTexture::readToPixels(ofFloatPixels & pixels) const {
 	pixels.allocate(texData.width,texData.height,ofGetImageTypeFromGLType(texData.glInternalFormat));
 	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT,pixels.getWidth(),pixels.getBytesPerChannel(),pixels.getNumChannels());
 	glBindTexture(texData.textureTarget,texData.textureID);
-	glGetTexImage(texData.textureTarget,0,ofGetGlFormat(pixels),GL_FLOAT,pixels.getData());
+	glGetTexImage(texData.textureTarget,0,ofGetGLFormat(pixels),GL_FLOAT,pixels.getData());
 	glBindTexture(texData.textureTarget,0);
 #endif
 }
@@ -1246,10 +1251,10 @@ void ofTexture::readToPixels(ofFloatPixels & pixels) const {
 #ifndef TARGET_OPENGLES
 //----------------------------------------------------------
 void ofTexture::copyTo(ofBufferObject & buffer) const{
-	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT,getWidth(),ofGetBytesPerChannelFromGLType(ofGetGlTypeFromInternal(texData.glInternalFormat)),ofGetNumChannelsFromGLFormat(ofGetGLFormatFromInternal(texData.glInternalFormat)));
+	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT,getWidth(),ofGetBytesPerChannelFromGLType(ofGetGLTypeFromInternal(texData.glInternalFormat)),ofGetNumChannelsFromGLFormat(ofGetGLFormatFromInternal(texData.glInternalFormat)));
 	buffer.bind(GL_PIXEL_PACK_BUFFER);
 	glBindTexture(texData.textureTarget,texData.textureID);
-	glGetTexImage(texData.textureTarget,0,ofGetGLFormatFromInternal(texData.glInternalFormat),ofGetGlTypeFromInternal(texData.glInternalFormat),0);
+	glGetTexImage(texData.textureTarget,0,ofGetGLFormatFromInternal(texData.glInternalFormat),ofGetGLTypeFromInternal(texData.glInternalFormat),0);
 	glBindTexture(texData.textureTarget,0);
 	buffer.unbind(GL_PIXEL_PACK_BUFFER);
 

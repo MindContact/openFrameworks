@@ -19,10 +19,9 @@
 #include "ofFileUtils.h"
 #include "ofGLProgrammableRenderer.h"
 #include "ofGLRenderer.h"
-#include "ofBaseTypes.h"
 using namespace std;
 
-static bool paused=true;
+static bool stopped=true;
 static bool surfaceDestroyed=false;
 
 
@@ -121,7 +120,12 @@ bool ofAppAndroidWindow::isSurfaceDestroyed() {
 	return surfaceDestroyed;
 }
 
-void ofAppAndroidWindow::setup(const ofGLESWindowSettings & settings){
+void ofAppAndroidWindow::setup(const ofGLESWindowSettings & settings)
+{
+	setup( (const ofxAndroidWindowSettings &)settings );
+}
+
+void ofAppAndroidWindow::setup(const ofxAndroidWindowSettings & settings){
 	glesVersion = settings.glesVersion;
 	ofLogError() << "setup gles" << glesVersion;
 	if(glesVersion<2){
@@ -137,13 +141,13 @@ void ofAppAndroidWindow::setup(const ofGLESWindowSettings & settings){
 		return;
 	}
 
-	jmethodID method = ofGetJNIEnv()->GetStaticMethodID(javaClass,"setupGL","(I)V");
+	jmethodID method = ofGetJNIEnv()->GetStaticMethodID(javaClass,"setupGL","(IZ)V");
 	if(!method){
 		ofLogError("ofAppAndroidWindow") << "setupOpenGL(): couldn't find OFAndroid setupGL method";
 		return;
 	}
 
-	ofGetJNIEnv()->CallStaticVoidMethod(javaClass,method,glesVersion);
+	ofGetJNIEnv()->CallStaticVoidMethod(javaClass,method,glesVersion,settings.preserveContextOnPause);
 }
 
 void ofAppAndroidWindow::update(){
@@ -237,6 +241,11 @@ shared_ptr<ofBaseRenderer> & ofAppAndroidWindow::renderer(){
 	return currentRenderer;
 }
 
+int ofAppAndroidWindow::getGlesVersion()
+{
+	return glesVersion;
+}
+
 extern "C"{
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -277,23 +286,29 @@ Java_cc_openframeworks_OFAndroid_onRestart( JNIEnv*  env, jobject  thiz ){
 }
 
 void
-Java_cc_openframeworks_OFAndroid_onPause( JNIEnv*  env, jobject  thiz ){
-	paused = true;
-	ofNotifyEvent(ofxAndroidEvents().pause);
+Java_cc_openframeworks_OFAndroid_onStart( JNIEnv*  env, jobject  thiz ){
+	ofLogVerbose("ofAppAndroidWindow") << "onStart";
+	stopped = false;
+	ofNotifyEvent(ofxAndroidEvents().start);
+}
+
+void
+Java_cc_openframeworks_OFAndroid_onStop( JNIEnv*  env, jobject  thiz ){
+	ofLogVerbose("ofAppAndroidWindow") << "onStop";
+	ofNotifyEvent( ofxAndroidEvents().stop );
+	stopped = true;
 }
 
 void
 Java_cc_openframeworks_OFAndroid_onResume( JNIEnv*  env, jobject  thiz ){
 	ofLogVerbose("ofAppAndroidWindow") << "onResume";
-	if(paused){
-		ofNotifyEvent(ofxAndroidEvents().resume);
-		paused = false;
-	}
+	ofNotifyEvent(ofxAndroidEvents().resume);
 }
 
 void
-Java_cc_openframeworks_OFAndroid_onStop( JNIEnv*  env, jobject  thiz ){
-
+Java_cc_openframeworks_OFAndroid_onPause( JNIEnv*  env, jobject  thiz ){
+	ofLogVerbose("ofAppAndroidWindow") << "onPause";
+	ofNotifyEvent(ofxAndroidEvents().pause);
 }
 
 
@@ -324,15 +339,15 @@ Java_cc_openframeworks_OFAndroid_onSurfaceCreated( JNIEnv*  env, jclass  thiz ){
 		window->renderer()->popStyle();
 
 	}else{
-
-	    if(window->renderer()->getType()==ofGLProgrammableRenderer::TYPE)
-	    {
-	    	static_cast<ofGLProgrammableRenderer*>(window->renderer().get())->setup(2,0);
-	    }
-	    else
-	    {
-	    	static_cast<ofGLRenderer*>(window->renderer().get())->setup();
-	    }
+		int glesVersion = window->getGlesVersion();
+		if( glesVersion < 2 )
+		{
+			static_cast<ofGLRenderer*>(window->renderer().get())->setup();
+		}
+		else
+		{
+			static_cast<ofGLProgrammableRenderer*>(window->renderer().get())->setup(glesVersion,0);
+		}
 	}
 
 	surfaceDestroyed = false;
@@ -342,7 +357,7 @@ void
 Java_cc_openframeworks_OFAndroid_setup( JNIEnv*  env, jclass  thiz, jint w, jint h  )
 {
 	ofLogVerbose("ofAppAndroidWindow") << "setup " << w << "x" << h;
-	paused = false;
+	stopped = false;
     sWindowWidth  = w;
     sWindowHeight = h;
 	window->renderer()->startRender();
@@ -374,7 +389,7 @@ void
 Java_cc_openframeworks_OFAndroid_render( JNIEnv*  env, jclass  thiz )
 {
 
-	if(paused || surfaceDestroyed) return;
+	if(stopped || surfaceDestroyed) return;
 
 	if(!threadedTouchEvents){
 		mtx.lock();

@@ -1,5 +1,4 @@
 #include "ofURLFileLoader.h"
-#include "ofBaseTypes.h"
 #include "ofAppRunner.h"
 #include "ofUtils.h"
 
@@ -20,6 +19,9 @@ ofEvent<ofHttpResponse> & ofURLResponseEvent(){
 	static ofEvent<ofHttpResponse> * event = new ofEvent<ofHttpResponse>;
 	return *event;
 }
+
+
+
 
 #if !defined(TARGET_IMPLEMENTS_URL_LOADER)
 class ofURLFileLoaderImpl: public ofThread, public ofBaseURLFileLoader{
@@ -177,6 +179,8 @@ namespace{
 
 ofHttpResponse ofURLFileLoaderImpl::handleRequest(const ofHttpRequest & request) {
 	curl_slist *headers = nullptr;
+	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0);
 	curl_easy_setopt(curl.get(), CURLOPT_URL, request.url.c_str());
 
 	// always follow redirections
@@ -196,13 +200,14 @@ ofHttpResponse ofURLFileLoaderImpl::handleRequest(const ofHttpRequest & request)
 
 	// set body if there's any
 	if(request.body!=""){
-		curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L);
+//		curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L); // Tis does PUT instead of POST
 		curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, request.body.size());
-        //curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, request.body.c_str());
-        curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, readBody_cb);
-        curl_easy_setopt(curl.get(), CURLOPT_READDATA, &body);
+		curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, nullptr);
+		//curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, request.body.c_str());
+		curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, readBody_cb);
+		curl_easy_setopt(curl.get(), CURLOPT_READDATA, &body);
 	}else{
-		curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 0L);
+//		curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 0L);
 		curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDSIZE, 0);
         //curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, nullptr);
         curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, nullptr);
@@ -210,8 +215,10 @@ ofHttpResponse ofURLFileLoaderImpl::handleRequest(const ofHttpRequest & request)
 	}
 	if(request.method == ofHttpRequest::GET){
 		curl_easy_setopt(curl.get(), CURLOPT_HTTPGET, 1);
+		curl_easy_setopt(curl.get(), CURLOPT_POST, 0);
 	}else{
 		curl_easy_setopt(curl.get(), CURLOPT_POST, 1);
+		curl_easy_setopt(curl.get(), CURLOPT_HTTPGET, 0);
 	}
 
     if(request.timeoutSeconds>0){
@@ -270,6 +277,12 @@ void ofURLFileLoaderImpl::update(ofEventArgs & args){
 
 ofURLFileLoader::ofURLFileLoader()
 :impl(new ofURLFileLoaderImpl){}
+#endif
+
+#ifdef TARGET_EMSCRIPTEN
+#include "ofxEmscriptenURLFileLoader.h"
+ofURLFileLoader::ofURLFileLoader()
+:impl(new ofxEmscriptenURLFileLoader){}
 #endif
 
 ofHttpResponse ofURLFileLoader::get(const string& url){

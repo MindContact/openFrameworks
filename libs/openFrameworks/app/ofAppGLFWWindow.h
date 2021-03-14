@@ -1,21 +1,20 @@
 #pragma once
 
 #include "ofConstants.h"
-
-#define GLFW_INCLUDE_NONE
-#include "GLFW/glfw3.h"
-
 #include "ofAppBaseWindow.h"
-#include "ofEvents.h"
-#include "ofPixels.h"
 #include "ofRectangle.h"
 
-#ifdef TARGET_LINUX
+#if defined(TARGET_LINUX) && !defined(TARGET_RASPBERRY_PI_LEGACY)
 typedef struct _XIM * XIM;
 typedef struct _XIC * XIC;
 #endif
 
 class ofBaseApp;
+struct GLFWwindow;
+class ofCoreEvents;
+template<typename T>
+class ofPixels_;
+typedef ofPixels_<unsigned char> ofPixels;
 
 #ifdef TARGET_OPENGLES
 class ofGLFWWindowSettings: public ofGLESWindowSettings{
@@ -33,7 +32,12 @@ public:
 	:ofGLWindowSettings(settings){}
 #endif
 
+#ifdef TARGET_RASPBERRY_PI
+	int numSamples = 0;
+#else
 	int numSamples = 4;
+#endif
+
 	bool doubleBuffering = true;
 	int redBits = 8;
 	int greenBits = 8;
@@ -70,7 +74,7 @@ public:
 	static bool doesLoop(){ return false; }
 	static bool allowsMultiWindow(){ return true; }
 	static bool needsPolling(){ return true; }
-	static void pollEvents(){ glfwPollEvents(); }
+	static void pollEvents();
 
 
     // this functions are only meant to be called from inside OF don't call them from your code
@@ -85,8 +89,6 @@ public:
 	void draw();
 	bool getWindowShouldClose();
 	void setWindowShouldClose();
-
-	void close();
 
 	void hideCursor();
 	void showCursor();
@@ -149,7 +151,7 @@ public:
 	OF_DEPRECATED_MSG("use ofGLFWWindowSettings to create the window instead", void setStencilBits(int stencil));
 	OF_DEPRECATED_MSG("use ofGLFWWindowSettings to create the window instead", void setMultiDisplayFullscreen(bool bMultiFullscreen)); //note this just enables the mode, you have to toggle fullscreen to activate it.
 
-#if defined(TARGET_LINUX) && !defined(TARGET_RASPBERRY_PI)
+#if defined(TARGET_LINUX) && !defined(TARGET_RASPBERRY_PI_LEGACY)
 	Display* 	getX11Display();
 	Window  	getX11Window();
 	XIC			getX11XIC();
@@ -189,18 +191,20 @@ private:
 	static void 	drop_cb(GLFWwindow* windowP_, int numFiles, const char** dropString);
 	static void		error_cb(int errorCode, const char* errorDescription);
 
-#ifdef TARGET_LINUX
+	void close();
+
+#if defined(TARGET_LINUX) && !defined(TARGET_RASPBERRY_PI_LEGACY)
 	void setWindowIcon(const std::string & path);
 	void setWindowIcon(const ofPixels & iconPixels);
 	XIM xim;
 	XIC xic;
 #endif
 
-	ofCoreEvents coreEvents;
+	std::unique_ptr<ofCoreEvents> coreEvents;
 	std::shared_ptr<ofBaseRenderer> currentRenderer;
 	ofGLFWWindowSettings settings;
 
-	ofWindowMode	windowMode;
+	ofWindowMode	targetWindowMode;
 
 	bool			bEnableSetupScreen;
 	int				windowW, windowH;		/// Physical framebuffer pixels extents
@@ -214,6 +218,7 @@ private:
 
 	int 			nFramesSinceWindowResized;
 	bool			bWindowNeedsShowing;
+	bool			needsResizeCheck = false; /// Just for RPI at this point
 
 	GLFWwindow* 	windowP;
 

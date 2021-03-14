@@ -81,7 +81,16 @@ else
 	PLATFORM_EMSCRIPTEN_TOTAL_MEMORY=134217728
 endif
 
-PLATFORM_LDFLAGS = -Wl,--as-needed -Wl,--gc-sections --preload-file bin/data@data --emrun
+ifdef USE_CCACHE
+	ifeq ($(findstring ccache, $(CC)),)
+		ORIGINAL_CC = $(CC)
+		CC := ccache $(ORIGINAL_CC)
+		ORIGINAL_CXX = $(CXX)
+		CXX := ccache $(ORIGINAL_CXX)
+	endif
+endif
+
+PLATFORM_LDFLAGS = -Wl --gc-sections --preload-file bin/data@data --emrun -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0
 PLATFORM_LDFLAGS += --js-library $(OF_ADDONS_PATH)/ofxEmscripten/libs/html5video/lib/emscripten/library_html5video.js
 PLATFORM_LDFLAGS += --js-library $(OF_ADDONS_PATH)/ofxEmscripten/libs/html5audio/lib/emscripten/library_html5audio.js
 
@@ -91,7 +100,7 @@ else
 	PLATFORM_LDFLAGS += --shell-file $(OF_LIBS_PATH)/openFrameworksCompiled/project/emscripten/template.html
 endif
 
-PLATFORM_OPTIMIZATION_LDFLAGS_RELEASE = -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=$(PLATFORM_EMSCRIPTEN_TOTAL_MEMORY) --memory-init-file 1
+PLATFORM_OPTIMIZATION_LDFLAGS_RELEASE = -O3 -s TOTAL_MEMORY=$(PLATFORM_EMSCRIPTEN_TOTAL_MEMORY) --memory-init-file 1
 
 PLATFORM_OPTIMIZATION_LDFLAGS_DEBUG = -g3 -s TOTAL_MEMORY=134217728 --memory-init-file 1  -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2
 
@@ -111,7 +120,7 @@ PLATFORM_OPTIMIZATION_LDFLAGS_DEBUG = -g3 -s TOTAL_MEMORY=134217728 --memory-ini
 ################################################################################
 
 # RELEASE Debugging options (http://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html)
-PLATFORM_OPTIMIZATION_CFLAGS_RELEASE = -O3 -s OUTLINING_LIMIT=100000
+PLATFORM_OPTIMIZATION_CFLAGS_RELEASE = -O3
 
 # DEBUG Debugging options (http://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html)
 PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = -g3 -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2
@@ -162,7 +171,7 @@ PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/glew/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/boost/include/boost/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/videoInput/%
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/assimp/%
-PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/fmodex/%
+PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/fmod/%
 
 ################################################################################
 # PLATFORM HEADER SEARCH PATHS
